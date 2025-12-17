@@ -41,7 +41,7 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_tasks_list_priority_order
   ON tasks(list_id, priority_level, order_index);
-  
+
 `);
 
 app.get('/', (req, res) => {
@@ -70,7 +70,7 @@ app.post('/api/items', (req, res) => {
     }
 
     db.run(
-      "INSERT INTO items (name) VALUES (?)" ,
+      "INSERT INTO items (name) VALUES (?)",
       [name],
       function (err) {
         if (err) return res.status(500).json({ error: err.message});
