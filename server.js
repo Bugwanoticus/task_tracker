@@ -7,49 +7,92 @@ const db = new sqlite3.Database("server.db")
 const app = express();
 const PORT = 3000;
 
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public_pages')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-db.exec(`
-  PRAGMA foreign_keys = ON;
-
-  CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL
-);
-
-  CREATE TABLE IF NOT EXISTS lists (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
-  CREATE TABLE IF NOT EXISTS tasks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  list_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  priority_level INTEGER NOT NULL DEFAULT 0,
-  date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
-  order_index INTEGER NOT NULL,
-  FOREIGN KEY (list_id) REFERENCES lists(id) ON DELETE CASCADE
-  
-);
-
-  CREATE INDEX IF NOT EXISTS idx_tasks_list_priority_order
-  ON tasks(list_id, priority_level, order_index);
-
-`);
-
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(__dirname, "public_pages", "index.html"));
 });
 
 app.get('/edit', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', "edit.html"));
+    res.sendFile(path.join(__dirname, 'public_pages', "edit.html"));
+});
+//signup route
+const bcrypt = require('bcrypt');
+app.post('/api/signup', async (req, res) => {
+  const username = req.body.username?.trim();
+  const password = req.body.password;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: "Password must be at least 6 characters long" });
+  }
+  if (password.length > 14) {
+    return res.status(400).json({ error: "Password must be at most 14 characters long" });
+  }
+  if (!/[0-9]/.test(password)) {
+    return res.status(400).json({ error: "Password must contain at least one number" });
+  }
+  if (!/[!@#$%^&*()]/.test(password)) {
+    return res.status(400).json({ error: "Password must contain at least one special character" });
+  }
+  if (username.length < 3) {
+    return res.status(400).json({ error: "Username must be at least 3 characters long" });
+  }
+  if (username.length > 12) {
+    return res.status(400).json({ error: "Username must be at most 12 characters long" });
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    db.run(
+      "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+      [username, hashedPassword],
+      function (err) {
+        if (err) {
+          if (err.message.includes("UNIQUE constraint failed")) {
+            return res.status(409).json({ error: "Username already exists" });
+          }
+          return res.status(500).json({ error: err.message });
+        }
+        return res.status(201).json({ success: true, user_Id: this.lastID, username });
+      }
+    );
+  } catch (error) {
+    return res.status(500).json({ error: "failed to create account" });
+  }
+});
+
+//login route
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+
+  db.get(
+    "SELECT id, password_hash FROM users WHERE username = ?",
+    [username],
+    async (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!user) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+
+      const match = await bcrypt.compare(password, row.password_hash);
+      if (!match) {
+        return res.status(401).json({ error: "Invalid username or password" });
+      }
+      res.json({ success: true, user_Id: user.id });
+    }
+  );
 });
 
 app.get('/api/items', (req, res) => {
