@@ -6,4 +6,4 @@ const db = new sqlite3.Database(dbpath);
 
 db.exec("PRAGMA foreign_keys = ON;");
 
-module
+module.exports = db;
