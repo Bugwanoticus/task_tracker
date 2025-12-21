@@ -7,7 +7,7 @@ const initSchema = require("./backend/db/schema");
 initSchema(db);
 
 const authRoutes = require("./backend/routes/auth.routes");
-const websiteRoutes = require("./backend/routes/website.routes");
+const itemsRoutes = require("./backend/routes/items.routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +26,6 @@ app.get("/tasks", (req, res) => res.sendFile(path.join(__dirname, "frontend", "p
 
 // mount API routes
 app.use("/api", authRoutes);
-app.use("/api", websiteRoutes);
+app.use("/api", itemsRoutes);
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

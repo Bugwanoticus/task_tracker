@@ -2,19 +2,20 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
-const { validateSignup, hashPassword, verifyPassword } = require("../services/auth.service");
+const authService = require("../services/auth.service.js");
+
+
 
 // POST /api/signup
 router.post("/signup", async (req, res) => {
   const username = req.body.username?.trim();
   const password = req.body.password;
 
-  const errMsg = validateSignup(username, password);
+  const errMsg = authService.validateSignup(username, password);
   if (errMsg) return res.status(400).json({ error: errMsg });
 
   try {
-    const hashed = await hashPassword(password);
-
+    const hashed = await authService.hashPassword(password);
     db.run(
       "INSERT INTO users (username, password_hash) VALUES (?, ?)",
       [username, hashed],
@@ -44,7 +45,7 @@ router.post("/login", (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (!row) return res.status(401).json({ error: "Invalid username or password" });
 
-    const ok = await verifyPassword(password, row.password_hash);
+    const ok = await authService.verifyPassword(password, row.password_hash);
     if (!ok) return res.status(401).json({ error: "Invalid username or password" });
 
     res.json({ success: true, user_Id: row.id });
