@@ -24,7 +24,7 @@
 
     <label for="password">Password:</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required/>
-    <div class="hint">Password must be at least 6-14 characters long and contain one number and one special character</div>
+    <div class="hint">Password must be at least 6-20 characters long, contain one letter, one number, and one special character</div>
     <br />
     <br />
 
@@ -35,8 +35,12 @@
     <p id="error" style="color:red;"></p>
 
   <script>
+    
     document.getElementById("signup-form").addEventListener("submit", async (e) => {
         e.preventDefault();
+        const errorEl = document.getElementById("error");
+        errorEl.textContent = "";
+    
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value;
         try {
@@ -45,16 +49,31 @@
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ username, password })
           });
-          const data = await res.json();
+          const raw = await res.text();
+          
+          let data;
+          try {
+            data = raw ? JSON.parse(raw) : {};
+          } catch { 
+            data = { error: raw || "Non-JSON response from server"}
+          }
+
+
           if (!res.ok) {
-              document.getElementById("error").textContent = data.error;
-              return;
+            if (data.errors) {
+                const msg = Object.values(data.errors).flat().join(", ");
+                errorEl.textContent = msg;
+            } else {
+                errorEl.textContent = data.message || data.error || "Signup failed";
+            }
+            return;
           }
 
           // success = go to the app
           window.location.href = "/";
       } catch (err) {
-          document.getElementById("error").textContent = "An error occurred. Please try again.";
+      console.error("Signup error has occured", err);
+      errorEl.textContent = " Could not reach server. Connection check?";
       }
     });
   </script>

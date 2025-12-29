@@ -22,7 +22,7 @@ router.post("/signup", async (req, res) => {
       function (err) {
         if (err) {
           if (err.message.includes("UNIQUE constraint failed")) {
-            return res.status(409).json({ error: "Username already exists" });
+            return res.status(409).json({ errors: { username: ["Username already exists"] } });
           }
           return res.status(500).json({ error: err.message });
         }
