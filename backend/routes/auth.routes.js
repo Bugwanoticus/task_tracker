@@ -10,6 +10,7 @@ const authService = require("../services/auth.service.js");
 router.post("/signup", async (req, res) => {
   const username = req.body.username?.trim();
   const password = req.body.password;
+  const email = req.body.email?.trim();
 
   const errMsg = authService.validateSignup(username, password);
   if (errMsg) return res.status(400).json({ error: errMsg });
@@ -17,8 +18,8 @@ router.post("/signup", async (req, res) => {
   try {
     const hashed = await authService.hashPassword(password);
     db.run(
-      "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-      [username, hashed],
+      "INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)",
+      [username, hashed, email],
       function (err) {
         if (err) {
           if (err.message.includes("UNIQUE constraint failed")) {

@@ -1,7 +1,9 @@
+console.log("🔥 AUTH SERVICE LOADED - NEW VERSION");
+
 // backend/services/auth.service.js
 const bcrypt = require("bcrypt");
 
-function validateSignup(username, password) {
+function validateSignup(username, password, confirm_password) {
     const errors = {};
 
     const usernameErrors = [];
@@ -31,6 +33,8 @@ function validateSignup(username, password) {
         passwordErrors.push("Password must contain at least one number");
     if (!/[!@#$%^&*()]/.test(password)) 
         passwordErrors.push("Password must contain at least one special character");
+    if (password != confirm_password)
+        passwordErrors.push("Password and confirm password must match")
 }
     if (passwordErrors.length) {
         errors.password = passwordErrors;

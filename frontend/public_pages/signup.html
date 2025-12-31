@@ -25,8 +25,8 @@
     <label for="password">Password:</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required/>
     <br />
-    <label for="confirm-password">Confirm Password:</label>
-    <input id="confirm-password" name="confirm-password" type="password" autocomplete="new-password" required/><br />
+    <label for="confirm_password">Confirm Password:</label>
+    <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required/><br />
     <div class="hint">(Password must be at least 6-20 characters long, contain one letter, one number, and one special character)</div>
     <br />
     <br />
@@ -50,11 +50,19 @@
     
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value;
+        const confirm_password = document.getElementById("confirm_password").value;
+        const email = document.getElementById("email").value.trim();
+
+        if (password !== confirm_password) {
+          console.log("passwords do not match")
+          return;
+        }
+
         try {
           const res = await fetch("/api/signup", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, password })
+              body: JSON.stringify({ username, password, confirm_email, email })
           });
           const raw = await res.text();
           
