@@ -15,13 +15,26 @@ const PORT = process.env.PORT || 3000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+
 // serve static frontend
 app.use(express.static(path.join(__dirname, "frontend", "public_pages")));
 
+//login logic
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "frontend", "login_page", "index.html")));
+
+//signup logic
 app.get("/signup", (req, res) => res.sendFile(path.join(__dirname, "frontend", "signup_page", "signup.html")));
+app.get("/signup.js", (req, res) => res.sendFile(path.join(__dirname, "frontend", "signup_page", "signup.js")));
+app.get("/signup.css", (req, res) => res.sendFile(path.join(__dirname, "frontend", "signup_page", "signup.css")));
+
+
+
+//password reset logic
 app.get("/reset", (req, res) => res.sendFile(path.join(__dirname, "frontend", "password_page", "password_reset.html")));
+
+//tasks page logic
 app.get("/tasks", (req, res) => res.sendFile(path.join(__dirname, "frontend", "tasks_page", "tasks.html")));
+
 
 // mount API routes
 app.use("/api", authRoutes);

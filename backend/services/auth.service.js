@@ -44,7 +44,7 @@ function validateSignup({username, password, confirm_password, email}) {
         confirmPasswordErrors.push("Confirm password is required");
     } else {
         if (confirm_password && password !== confirm_password)
-            passwordErrors.push("Password and confirm password must match")
+            confirmPasswordErrors.push("Password and confirm password must match")
 }
     if (confirmPasswordErrors.length > 0) {
         errors.confirm_password = confirmPasswordErrors;

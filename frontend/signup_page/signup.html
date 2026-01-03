@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Signup Page</title>
+  <link rel="stylesheet" href="signup.css">
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
     h1 { margin-bottom: 0.2rem; }
@@ -15,35 +16,38 @@
   <p><a href="/">Back to Login</a></p>
   <h1>Create Account</h1>
   <p>Make a username and password to start using this service</p>
-    <form id="signup-form">
+    <form id="signup-form" novalidate>
     <label for="username">Username:</label> 
     <input id="username" name="username" type="text" autocomplete="username" required/>
-    <div class="error" data-error-for="username"></div>
     <div class="hint">(Username must be at least 3-12 characters long)</div>
     <br />
     <br />
 
     <label for="password">Password:</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required/>
-    <div class="error" data-error-for="password"></div>
     <br />
     <label for="confirm_password">Confirm Password:</label>
     <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" required/><br />
-    <div class="error" data-error-for="confirm_password"></div>
     <div class="hint">(Password must be at least 6-20 characters long, contain one letter, one number, and one special character)</div>
     <br />
     <br />
 
     <label for="email">Email:</label>
     <input id="email" name="email" type="email" required/>
-    <div class="error" data-error-for="email"></div>
     <br />
     <br />
 
     <button type="submit">Create Account</button>
     </form>
+    
+    <div class="error" data-error-for="username"></div>
+    <div class="error" data-error-for="password"></div>
+    <div class="error" data-error-for="confirm_password"></div>
+    <div class="error" data-error-for="email"></div>
 
-    <p id="globalerror" style="color:red;"></p>
+    <p id="global-error" class="error"></p>
+
     <script src="signup.js"></script>
+    
 </body>
 </html>
