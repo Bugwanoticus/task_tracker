@@ -73,4 +73,67 @@ async function verifyPassword(password, password_hash) {
   return bcrypt.compare(password, password_hash);
 }
 
-module.exports = { validateSignup, hashPassword, verifyPassword };
+
+// generates a 6-digit code as a string
+function generateCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();   
+}
+
+//hashes the 6digit code
+const crypto = require("crypto");
+function hashCode(code) {
+    return crypto.createHash("sha256").update(code).digest("hex");
+}
+
+//sends an email verification to the users email on signup
+async function sendEmailVerificationCode(email) {
+    const user = await getUserByEmail(email);
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+        await db.run(
+        "DELETE FROM email_verification WHERE user_id = ? AND purpose = ?",
+        [user.id, "email_verify"]
+    );
+    
+        const code = generateCode();
+        const codeHash = hashCode(code);
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+    
+        await insertVerificationCode({
+            userId: user.id,
+            codeHash,
+            expiresAt,
+            purpose: "email_verify"
+        });
+
+        await sendEmail(email, code);
+    }
+
+    //sends a password reset code to the user's email
+async function sendPasswordResetCode(email) {
+    const user = await getUserByEmail(email);
+    if (!user) return;
+
+    await db.run(
+        "DELETE FROM email_verification WHERE user_id = ? AND purpose = ?",
+        [user.id, "password_reset"]
+    );
+
+        const code = generateCode();
+        const codeHash = hashCode(code);
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
+
+        await insertVerificationCode({
+            userId: user.id,
+            codeHash,
+            expiresAt,
+            purpose: "password_reset"
+        });
+
+        await sendEmail(email, code);
+    }
+
+
+module.exports = { validateSignup, hashPassword, verifyPassword, generateCode, hashCode };
