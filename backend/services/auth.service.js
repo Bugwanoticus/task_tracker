@@ -85,18 +85,21 @@ function hashCode(code) {
     return crypto.createHash("sha256").update(code).digest("hex");
 }
 
-//sends an email verification to the users email on signup
+//sends an email verification code
 async function sendEmailVerificationCode(email) {
     const user = await getUserByEmail(email);
     if (!user) {
         throw new Error("User not found");
+    }
+    if (user.email_verified == 1) {
+        return;
     }
 
         await db.run(
         "DELETE FROM email_verification WHERE user_id = ? AND purpose = ?",
         [user.id, "email_verify"]
     );
-    
+
         const code = generateCode();
         const codeHash = hashCode(code);
         const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
@@ -135,5 +138,42 @@ async function sendPasswordResetCode(email) {
         await sendEmail(email, code);
     }
 
+// verify the code that was sent
+async function verifyCode(email, code, purpose) {
+    const user = await getUserByEmail(email);
 
-module.exports = { validateSignup, hashPassword, verifyPassword, generateCode, hashCode };
+    if (!user) {
+        throw new Error("User not found");
+}
+
+    const codeHash = hashCode(code);
+    const verification = await db.get(
+        "SELECT * FROM email_verification WHERE user_id = ? AND code_hash = ? AND purpose = ?",
+        [user.id, codeHash, purpose]
+    );
+
+    if (!verification) {
+        throw new Error("Invalid or expired verification code");
+    }
+
+    if (new Date(verification.expires_at) < new Date()) {
+        throw new Error("Verification code has expired");
+    }
+
+    await db.run(
+        "DELETE FROM email_verification WHERE id = ?",
+        [verification.id]
+    );
+}
+
+//change email verify state
+async function markEmailAsVerified(email) {
+    if (!userId) return;
+    await authservice.verifyCode(email, code, "email_verify");
+    await db.run(
+        "UPDATE users SET email_verified = 1 WHERE id = ?",
+        [email]
+    );
+}
+
+module.exports = { validateSignup, hashPassword, verifyPassword, generateCode, hashCode, sendEmailVerificationCode, sendPasswordResetCode };

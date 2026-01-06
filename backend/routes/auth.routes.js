@@ -3,7 +3,8 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
 const authService = require("../services/auth.service.js");
-
+const verificationService = require("../services/verification/verification.service.js");
+const codegeneration = require("../services/verification/code.generation.js");
 
 
 // POST /api/signup
@@ -31,7 +32,7 @@ router.post("/signup", async (req, res) => {
           }
           return res.status(500).json({ errors: { global: ["failed to create account"] } });
         }
-        res.status(201).json({ success: true, user_Id: this.lastID, username });
+        res.status(201).json({ success: true, userId: this.lastID, username });
       }
     );
   } catch {
@@ -54,6 +55,53 @@ router.post("/login", (req, res) => {
 
     res.json({ success: true, user_Id: row.id });
   });
+});
+
+// POST /api/send-verification-email
+router.post("/send-verification-email", async (req, res) => {
+  
+  const { email } = req.body;
+  try {
+    await verificationService.sendEmailVerificationCode(email);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ errors: { global: [err.message] } });
+  }
+});
+
+// POST /api/send-password-reset
+router.post("/send-password-reset", async (req, res) => {
+  const { email } = req.body;
+
+  await verificationService.sendPasswordResetCode(email);
+  res.json({ success: true });
+  });
+
+// POST /api/verify-email
+router.post("/verify-email", async (req, res) => {
+  const { email, code } = req.body;
+
+  try {
+    const user = await verificationService.verifyCode({email, code, purpose: "email_verify"});
+    
+    await verificationService.markEmailAsVerified(user.id);
+    res.json({ success: true });
+
+  } catch (err) {
+    res.status(400).json({ errors: { global: [err.message] } });
+  }
+});
+
+// POST /api/reset
+router.post("/password-reset", async (req, res) => {
+  const { email, code, newPassword } = req.body;
+
+  try {
+    const user = await verificationService.verifyCode({email, code, purpose: "password_reset"});
+
+  } catch {
+    res.status(400).json({ errors: { global: ["Invalid or expired reset code"] } });
+  }
 });
 
 module.exports = router;
